@@ -1,1 +1,10 @@
----type your answer
+1) In Azure Pipelines -> Pipelines Classic Way, Select Enable continuous integration on the Triggers tab to enable this trigger if you want the build to run whenever someone checks in code. After enabling it, under Branch filters specify "master" branch in the Branch Specification and Type "Include".
+In YAML way put the below lines in the file azure-pipelines.yml
+trigger:
+- master
+
+2) Since test is also part of the solution, on cloning the above solution repository, we have all the three projects cloned in the working directory. However, when building each of the individual projects we can add tasks to the job to be run. Now inside each task we have something called "Control Options" which has few options available which defines when a specific task should be run. So make sure we need to enable the "Contol Options" which is by default, and the specific task i.e buiding test project runs only if the previous tasks  (Web and API) are successfully built. Now if the test project build fails, the the whole Build pipeline fails and if the test project build is successful then the build pipeline is successful. Using these above conditions we can make sure if the Build Pipeline is successful or failure.
+
+3) Once the Build is successful and artifacts are generated which can be deployed through Release Pipelines, the Continuos Deployment Trigger should be enabled which creates an automatic release every time a new build is available. In the Release pipeline, under the Stages we can add Dev, QA and Prod. However, for the Dev environment, make sure the "After Release" trigger is enabled without any Pre Deployment Approvals such that, the artifacts gets deployed to Dev automatically everytime a new successful build is available.
+
+4 & 5) As mentioned above, assuming the stages Dev, QA and Prod are created sequentially under the Release pipeline, once the artifact gets deployed to Dev Stage automatically, we need to make sure to enable the Pre-Deployment Approvals on QA and Prod and add the required Approvers. This Approval system notifies the approvers and once they approve, the specific artifact gets deployed to QA and Prod too.
