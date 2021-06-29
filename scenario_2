@@ -1,1 +1,28 @@
+NOTE: I have not worked on Terraform earlier, however as part of the assignment I was reading through the docs, understanding it's interation with Azure and answered the below questions.
 
+1) The different artifacts to create are the "drop" artifact as part of the Build pipeline. This artifact holds the terraform files ".tf" necessary for the creation of infrastructure during deployment process in the Release Pipeline.
+
+2) By default, Terraform stores state locally in a file named terraform.tfstate. But when working with Terraform in a team, use of local file makes things complicated. Hence versioning and storing in a common place is preferred approach. With remote state, Terraform writes the state data to a remote data store. We can use Azure CLI to create Azure storage account and storage container to store Terraform state.
+
+3) a) Navigate to Azure Pipelines -> Releases.
+   b) Create the Release Pipeline for example "Terraform-CD"
+   c) Select the Azure CLI task to configure state backend and retrieve the necessary fields like storage_account_name, container_name, access_key, key (name of the state store         file to be created.
+   d) Add Terraform tool installer task to install specific version in Azure pipelines agent (hosted or private)
+   e) Add Terraform task with custom command as "init" with the fields in the task filled with appropriate values like Configuration directory -> drop folder, Storage Account,           Resource Group, container and Key to the above created storage account resource in Azure.
+   f) The above task runs terraform init command. The terraform init command looks through all of the *.tf files in the current working directory and automatically downloads any         of the providers required for them. In our example, it will download Azure provider as we are going to deploy Azure resources.
+   g) Add Terraform task with custom command as "plan". The terraform plan command is used to create an execution plan. Terraform determines what actions are necessary to achieve       the desired state specified in the configuration files. This is a dry run and shows which actions will be made.
+   h) Add Terraform task with custom command as "apply"  with additional command argument "-auto-approve". This task will run the terraform apply command to deploy the resources.       By default, it will also prompt for confirmation that you want to apply those changes. Since we are automating the deployment we are adding auto-approve argument to not           prompt for confirmation.
+   i) By using the above steps, we are automating the deployment process of creating the necessary infrastructure needed using Azurerm provider and terrafom .tf files.
+
+ 5) Using Terraform Data source and Azurerm_key_vault_secret we connect to the name of the key vault and the URI like below:
+     data "azurerm_key_vault_secret" "mySecret" {
+     name = "admin"
+     vault_uri = "https://yourKeyVault.vault.azure.net/"
+    }
+    
+    Then using os_profile 
+    os_profile {
+    computer_name = "testvm"
+    admin_username = "admin"
+    admin_password = "${data.azurerm_key_vault_secret.mySecret.value}"
+    }
